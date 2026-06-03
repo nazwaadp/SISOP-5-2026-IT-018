@@ -158,28 +158,34 @@ void readString(char* buf)
 {
     int i = 0;
     char c;
+
     while (1)
     {
         c = getChar();
-        if (c == 13)          // Enter
+
+        if (c == 13)
         {
             buf[i] = 0;
             return;
         }
-        if (c == 8)           // Backspace
+
+        if (c == 8)
         {
             if (i > 0)
             {
                 i--;
+
                 cursor--;
-                printChar(' ');
-                cursor--;
+
+                putInMemory(0xB800, cursor * 2, ' ');
+                putInMemory(0xB800, cursor * 2 + 1, color);
             }
         }
         else
         {
             buf[i] = c;
             i++;
+
             printChar(c);
         }
     }
@@ -233,13 +239,23 @@ int atoi(char* str)
 {
     int n = 0;
     int i = 0;
+    int sign = 1;
+
+    if (str[0] == '-')
+    {
+        sign = -1;
+        i = 1;
+    }
+
     while (str[i] != 0)
     {
         n = n * 10;
         n = n + (str[i] - '0');
+
         i++;
     }
-    return n;
+
+    return n * sign;
 }
 ```
 
@@ -252,24 +268,77 @@ void intToString(int n, char* buf)
 {
     int i = 0;
     int count;
+    int started = 0;
 
-    if (n == 0) { buf[0] = '0'; buf[1] = 0; return; }
+    if (n < 0)
+    {
+        buf[i] = '-';
+        i++;
+        n = -n;
+    }
+
+    if (n == 0)
+    {
+        buf[i++] = '0';
+        buf[i] = 0;
+        return;
+    }
+
 
     count = 0;
-    while (n >= 10000) { n = n - 10000; count++; }
-    if (count > 0) buf[i++] = count + '0';
+    while (n >= 10000)
+    {
+        n = n - 10000;
+        count++;
+    }
+
+    if (count > 0)
+    {
+        buf[i++] = count + '0';
+        started = 1;
+    }
+
 
     count = 0;
-    while (n >= 1000) { n = n - 1000; count++; }
-    if (count > 0 || i > 0) buf[i++] = count + '0';
+    while (n >= 1000)
+    {
+        n = n - 1000;
+        count++;
+    }
+
+    if (count > 0 || started)
+    {
+        buf[i++] = count + '0';
+        started = 1;
+    }
+
 
     count = 0;
-    while (n >= 100) { n = n - 100; count++; }
-    if (count > 0 || i > 0) buf[i++] = count + '0';
+    while (n >= 100)
+    {
+        n = n - 100;
+        count++;
+    }
+
+    if (count > 0 || started)
+    {
+        buf[i++] = count + '0';
+        started = 1;
+    }
+
 
     count = 0;
-    while (n >= 10) { n = n - 10; count++; }
-    if (count > 0 || i > 0) buf[i++] = count + '0';
+    while (n >= 10)
+    {
+        n = n - 10;
+        count++;
+    }
+
+    if (count > 0 || started)
+    {
+        buf[i++] = count + '0';
+    }
+
 
     buf[i++] = n + '0';
     buf[i] = 0;
@@ -299,11 +368,17 @@ Menghitung faktorial secara iteratif. Loop mulai dari 2 karena `1! = 0! = 1` sud
 char* nextToken(char* str)
 {
     while (*str != 0 && *str != ' ')
+    {
         str++;
-    if (*str == 0)
-        return str;
-    *str = 0;
-    return str + 1;
+    }
+
+    if (*str == ' ')
+    {
+        *str = 0;
+        str++;
+    }
+
+    return str;
 }
 ```
 
@@ -485,16 +560,26 @@ else if (startsWith(cmd, "season "))
 else if (startsWith(cmd, "triangle "))
 {
     int n;
-    int i;
-    int j;
+    int row;
+    int col;
 
     n = atoi(cmd + 9);
 
-    for (i = 1; i <= n; i++)
+    row = 1;
+
+    while (row <= n)
     {
-        for (j = 0; j < i; j++)
+        col = 0;
+
+        while (col < row)
+        {
             printChar('X');
+            col++;
+        }
+
         newline();
+
+        row++;
     }
 }
 ```
@@ -538,7 +623,7 @@ else if (strcmp(cmd, "clear"))
 ![8](assets/soal_2/8.png) <br>
 #### 9. Output perintah `help` — daftar semua perintah
 ![9](assets/soal_2/9.png) <br>
-#### Output perintah `clear` — layar bersih, cursor kembali ke pojok kiri atas
+#### 10. Output perintah `clear` — layar bersih, cursor kembali ke pojok kiri atas
 ![10-1](assets/10-1.png) <br>
 ![10-2](assets/soal_2/10-2.png) <br>
 
